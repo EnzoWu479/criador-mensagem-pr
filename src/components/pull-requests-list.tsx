@@ -93,7 +93,6 @@ export default function PullRequestsList({
       console.log(tasks);
       const prText = createPrText(pr, tasks);
 
-
       navigator.clipboard.writeText(prText).then(() => {
         alert("Pull request ID copied to clipboard!");
       });
