@@ -196,7 +196,7 @@ export async function fetchTasksFromPR({
     }
 
     const data = await response.json();
-    return data.value || [];
+    return data || [];
   } catch (error) {
     console.error("Erro ao buscar tasks do PR:", error);
     throw error;
