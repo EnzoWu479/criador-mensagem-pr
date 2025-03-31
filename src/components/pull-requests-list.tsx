@@ -17,6 +17,7 @@ import {
   User,
   Copy,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -95,7 +96,7 @@ export default function PullRequestsList({
       const data = [new ClipboardItem({ "text/html": blob })];
 
       navigator.clipboard.write(data).then(() => {
-        alert("Pull request ID copied to clipboard!");
+        toast("Pull request ID copied to clipboard!");
       });
     } catch (error) {
       console.error("Error copying pull request ID:", error);

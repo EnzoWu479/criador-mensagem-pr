@@ -16,10 +16,10 @@ export const createPrText = (
  
 ${workItems
   .map((item) => `- <a href="${item.link}">${item.title}</a>`)
-  .join("<br>")}
-Branch Origin: ${pullRequest.sourceRefName.replace("refs/heads/", "")}
-Branch Target: ${pullRequest.targetRefName.replace("refs/heads/", "")}
-Link PR: <a href="${pullRequest.url}">${pullRequest.title}</a>
+  .join("<br>")}<br><br>
+Branch Origin: ${pullRequest.sourceRefName.replace("refs/heads/", "")}<br>
+Branch Target: ${pullRequest.targetRefName.replace("refs/heads/", "")}<br>
+Link PR: <a href="${pullRequest.url}">${pullRequest.title}</a><br><br>
  
 Reviewers: ${pullRequest.reviewers
     .map((reviewer) => reviewer.displayName)
