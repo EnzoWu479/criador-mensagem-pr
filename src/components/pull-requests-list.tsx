@@ -15,21 +15,14 @@ import {
   GitPullRequest,
   Calendar,
   User,
+  Copy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { fetchPullRequests } from "@/lib/azure-devops-api";
-
-interface PullRequest {
-  pullRequestId: number;
-  title: string;
-  status: string;
-  creationDate: string;
-  createdBy: {
-    displayName: string;
-  };
-}
+import { fetchPullRequests, fetchTasksFromPR } from "@/lib/azure-devops-api";
+import { IAzureDevopsPullRequest } from "@/types/pull-requests";
+import { createPrText } from "@/utils/create-pr-text";
 
 interface PullRequestsListProps {
   token: string;
@@ -37,6 +30,7 @@ interface PullRequestsListProps {
   project: string;
   repositoryId: string;
   enabled: boolean;
+  pullRequestId?: string;
 }
 
 export default function PullRequestsList({
@@ -45,8 +39,11 @@ export default function PullRequestsList({
   project,
   repositoryId,
   enabled,
+  pullRequestId,
 }: PullRequestsListProps) {
-  const [pullRequests, setPullRequests] = useState<PullRequest[]>([]);
+  const [pullRequests, setPullRequests] = useState<IAzureDevopsPullRequest[]>(
+    []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -64,15 +61,43 @@ export default function PullRequestsList({
         organization,
         project,
         repositoryId,
-        status: "all", // Fetch all PRs regardless of status
+        status: "active", // Fetch all PRs regardless of status
       });
-      setPullRequests(prs);
+      if (pullRequestId) {
+        const filteredPRs = prs.filter(
+          (pr) => pr.pullRequestId.toString() === pullRequestId
+        );
+        setPullRequests(filteredPRs);
+      } else {
+        setPullRequests(prs);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch pull requests"
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCopy = async (pr: IAzureDevopsPullRequest) => {
+    try {
+      const tasks = await fetchTasksFromPR({
+        token,
+        organization,
+        project,
+        repositoryId,
+        pullRequestId: pr.pullRequestId.toString(),
+      });
+
+      console.log(tasks);
+      const prText = createPrText(pr, tasks);
+
+      navigator.clipboard.writeText(prText).then(() => {
+        alert("Pull request ID copied to clipboard!");
+      });
+    } catch (error) {
+      console.error("Error copying pull request ID:", error);
     }
   };
 
@@ -186,17 +211,16 @@ export default function PullRequestsList({
                       </div>
                     </div>
                   </div>
-                  <Badge
-                    variant={
-                      pr.status === "active"
-                        ? "default"
-                        : pr.status === "completed"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {pr.status}
-                  </Badge>
+                  <div className="flex flex-col gap-4">
+                    <Badge variant={"default"}>{pr.status}</Badge>
+                    <button
+                      type="button"
+                      className="self-end cursor-pointer"
+                      onClick={() => handleCopy(pr)}
+                    >
+                      <Copy size={"20px"} />
+                    </button>
+                  </div>
                 </div>
               </div>
             </Card>

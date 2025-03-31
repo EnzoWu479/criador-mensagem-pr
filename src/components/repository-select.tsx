@@ -139,12 +139,12 @@ export default function RepositorySelect({
         </Alert>
       ) : (
         <Select value={value} onValueChange={onValueChange}>
-          <SelectTrigger id="repository">
+          <SelectTrigger id="repository" className="w-full">
             <SelectValue placeholder="Select repository" />
           </SelectTrigger>
           <SelectContent>
             {repositories.map((repo) => (
-              <SelectItem key={repo.id} value={repo.id}>
+              <SelectItem key={repo.id} value={repo.name}>
                 {repo.name}
               </SelectItem>
             ))}

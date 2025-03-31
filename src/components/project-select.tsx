@@ -147,7 +147,7 @@ export default function ProjectSelect({
         </Alert>
       ) : (
         <Select value={value} onValueChange={onValueChange}>
-          <SelectTrigger id="project">
+          <SelectTrigger id="project" className="w-full">
             <SelectValue placeholder="Select project" />
           </SelectTrigger>
           <SelectContent>
