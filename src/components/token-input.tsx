@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { InfoIcon, CheckCircle, XCircle, ShieldIcon } from "lucide-react"
-import { setCookie, removeCookie } from "@/lib/cookies"
-import { setSecureCookie, deleteSecureCookie } from "@/app/actions"
-import type { ChangeEvent } from "react"
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon, CheckCircle, XCircle, ShieldIcon } from "lucide-react";
+import { setCookie, removeCookie } from "@/lib/cookies";
+import { setSecureCookie, deleteSecureCookie } from "@/app/actions";
+import type { ChangeEvent } from "react";
 
 interface TokenInputProps {
-  value: string
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void
-  hasStoredToken: boolean
-  setHasStoredToken: (value: boolean) => void
-  onTokenSaved?: (token: string) => void
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  hasStoredToken: boolean;
+  setHasStoredToken: (value: boolean) => void;
+  onTokenSaved?: (token: string) => void;
 }
 
 export default function TokenInput({
@@ -25,60 +25,62 @@ export default function TokenInput({
   setHasStoredToken,
   onTokenSaved,
 }: TokenInputProps) {
-  const [saveSecure, setSaveSecure] = useState(true)
-  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle")
+  const [saveSecure, setSaveSecure] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">(
+    "idle"
+  );
 
   const handleSaveToken = async () => {
     if (!value.trim()) {
-      setSaveStatus("error")
-      return
+      setSaveStatus("error");
+      return;
     }
 
     try {
       if (saveSecure) {
         // Save in HttpOnly cookie via server action with encryption
-        await setSecureCookie("azureDevOpsToken", value)
+        await setSecureCookie("azureDevOpsToken", value);
       } else {
         // Save in regular cookie with encryption
-        setCookie("azureDevOpsToken", value)
+        setCookie("azureDevOpsToken", value);
       }
 
-      setHasStoredToken(true)
-      setSaveStatus("success")
+      setHasStoredToken(true);
+      setSaveStatus("success");
 
       // Notify parent component that token was saved
       if (onTokenSaved) {
-        onTokenSaved(value)
+        onTokenSaved(value);
       }
 
       // Reset status after 3 seconds
       setTimeout(() => {
-        setSaveStatus("idle")
-      }, 3000)
+        setSaveStatus("idle");
+      }, 3000);
     } catch (error) {
-      console.error("Error saving token:", error)
-      setSaveStatus("error")
+      console.error("Error saving token:", error);
+      setSaveStatus("error");
     }
-  }
+  };
 
   const handleClearToken = async () => {
     try {
       // Clear both types of cookies to be safe
-      removeCookie("azureDevOpsToken")
-      await deleteSecureCookie("azureDevOpsToken")
+      removeCookie("azureDevOpsToken");
+      await deleteSecureCookie("azureDevOpsToken");
 
-      setHasStoredToken(false)
-      onChange({ target: { value: "" } } as ChangeEvent<HTMLInputElement>)
-      setSaveStatus("idle")
+      setHasStoredToken(false);
+      onChange({ target: { value: "" } } as ChangeEvent<HTMLInputElement>);
+      setSaveStatus("idle");
 
       // Notify parent component that token was cleared
       if (onTokenSaved) {
-        onTokenSaved("")
+        onTokenSaved("");
       }
     } catch (error) {
-      console.error("Error clearing token:", error)
+      console.error("Error clearing token:", error);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
@@ -86,8 +88,8 @@ export default function TokenInput({
         <Alert variant="info" className="bg-blue-50 border-blue-200">
           <InfoIcon className="h-4 w-4 text-blue-500" />
           <AlertDescription className="text-blue-700">
-            You'll need an Azure DevOps Personal Access Token with appropriate permissions. Your token will be encrypted
-            before storage.
+            You'll need an Azure DevOps Personal Access Token with appropriate
+            permissions. Your token will be encrypted before storage.
           </AlertDescription>
         </Alert>
       )}
@@ -95,7 +97,9 @@ export default function TokenInput({
       {hasStoredToken && (
         <Alert className="bg-green-50 border-green-200">
           <ShieldIcon className="h-4 w-4 text-green-500" />
-          <AlertDescription className="text-green-700">Your token is encrypted and stored securely.</AlertDescription>
+          <AlertDescription className="text-green-700">
+            Your token is encrypted and stored securely.
+          </AlertDescription>
         </Alert>
       )}
 
@@ -106,17 +110,29 @@ export default function TokenInput({
             id="token"
             value={value}
             onChange={onChange}
-            placeholder={hasStoredToken ? "Token saved securely" : "Enter your access token"}
+            placeholder={
+              hasStoredToken
+                ? "Token saved securely"
+                : "Enter your access token"
+            }
             type="password"
             className="flex-1"
           />
 
           {hasStoredToken ? (
-            <Button variant="destructive" onClick={handleClearToken} className="whitespace-nowrap">
+            <Button
+              variant="destructive"
+              onClick={handleClearToken}
+              className="whitespace-nowrap"
+            >
               Clear Token
             </Button>
           ) : (
-            <Button onClick={handleSaveToken} className="whitespace-nowrap" disabled={saveStatus === "success"}>
+            <Button
+              onClick={handleSaveToken}
+              className="whitespace-nowrap"
+              disabled={saveStatus === "success"}
+            >
               {saveStatus === "success" ? (
                 <>
                   <CheckCircle className="mr-1 h-4 w-4" />
@@ -147,12 +163,14 @@ export default function TokenInput({
             onChange={(e) => setSaveSecure(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
           />
-          <Label htmlFor="secureStorage" className="text-sm text-muted-foreground">
+          <Label
+            htmlFor="secureStorage"
+            className="text-sm text-muted-foreground"
+          >
             Store token securely with encryption (recommended)
           </Label>
         </div>
       )}
     </div>
-  )
+  );
 }
-

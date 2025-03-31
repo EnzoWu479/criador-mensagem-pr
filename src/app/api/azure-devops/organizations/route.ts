@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Make the request to Azure DevOps API from the server
-    const response = await fetch("https://app.vssps.visualstudio.com/_apis/accounts?api-version=7.0", {
+    const response = await fetch("https://app.vssps.visualstudio.com/_apis/accounts?api-version=7.1-preview.1", {
       headers: {
         Authorization: `Basic ${Buffer.from(`:${token}`).toString("base64")}`,
         "Content-Type": "application/json",
