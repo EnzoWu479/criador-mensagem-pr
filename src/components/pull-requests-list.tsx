@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { fetchPullRequests, fetchTasksFromPR } from "@/lib/azure-devops-api";
 import { IAzureDevopsPullRequest } from "@/types/pull-requests";
 import { createPrText } from "@/utils/create-pr-text";
+import { cn } from "@/lib/utils";
 
 interface PullRequestsListProps {
   token: string;
@@ -45,6 +46,7 @@ export default function PullRequestsList({
   const [pullRequests, setPullRequests] = useState<IAzureDevopsPullRequest[]>(
     []
   );
+  const [copyLoading, setCopyLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,6 +85,7 @@ export default function PullRequestsList({
 
   const handleCopy = async (pr: IAzureDevopsPullRequest) => {
     try {
+      setCopyLoading(true);
       const tasks = await fetchTasksFromPR({
         token,
         organization,
@@ -100,6 +103,8 @@ export default function PullRequestsList({
       });
     } catch (error) {
       console.error("Error copying pull request ID:", error);
+    } finally {
+      setCopyLoading(false);
     }
   };
 
@@ -217,7 +222,11 @@ export default function PullRequestsList({
                     <Badge variant={"default"}>{pr.status}</Badge>
                     <button
                       type="button"
-                      className="self-end cursor-pointer"
+                      disabled={copyLoading}
+                      className={cn(
+                        "self-end cursor-pointer",
+                        copyLoading && "opacity-50 cursor-not-allowed"
+                      )}
                       onClick={() => handleCopy(pr)}
                     >
                       <Copy size={"20px"} />

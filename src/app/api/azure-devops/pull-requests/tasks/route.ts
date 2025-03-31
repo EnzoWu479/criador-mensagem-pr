@@ -35,9 +35,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Nenhum Work Item vinculado a esse PR." });
     }
 
-    // 🔹 2️⃣ Buscar detalhes dos Work Items, incluindo nome (title)
+    // 🔹 2️⃣ Buscar detalhes dos Work Items, incluindo nome (title) e tipo (PBI ou Task)
     const taskIds = workItems.map((item: any) => item.id).join(",");
-    const tasksUrl = `https://dev.azure.com/${organization}/${project}/_apis/wit/workitems?ids=${taskIds}&fields=System.Title&api-version=7.1`;
+    const tasksUrl = `https://dev.azure.com/${organization}/${project}/_apis/wit/workitems?ids=${taskIds}&fields=System.Title,System.WorkItemType&api-version=7.1`;
 
     const tasksResponse = await fetch(tasksUrl, {
       headers: {
@@ -55,11 +55,12 @@ export async function POST(request: NextRequest) {
 
     const tasksData = await tasksResponse.json();
 
-    // 🔹 3️⃣ Retorna um array com ID, Nome e Link para cada Work Item
+    // 🔹 3️⃣ Retorna um array com ID, Nome, Tipo e Link para cada Work Item
     const formattedWorkItems = tasksData.value.map((task: any) => ({
       id: task.id,
       title: task.fields["System.Title"],
-      link: `https://dev.azure.com/${organization}/${project}/_workitems/edit/${task.id}`, // 🔗 Link direto para o Work Item
+      type: task.fields["System.WorkItemType"], // 🔹 Tipo do Work Item (ex: "Task", "Product Backlog Item")
+      link: `https://dev.azure.com/${organization}/${project}/_workitems/edit/${task.id}`,
     }));
 
     return NextResponse.json(formattedWorkItems);

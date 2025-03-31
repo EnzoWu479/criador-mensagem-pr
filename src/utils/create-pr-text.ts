@@ -3,6 +3,7 @@ import { IAzureDevopsPullRequest } from "@/types/pull-requests";
 export type IWorkItem = {
   id: number;
   title: string;
+  type: string;
   link: string;
 };
 
@@ -15,7 +16,7 @@ export const createPrText = (
   }</a><br><br>
  
 ${workItems
-  .map((item) => `- <a href="${item.link}">${item.title}</a>`)
+  .map((item) => `- [${item.type}] <a href="${item.link}">${item.title}</a>`)
   .join("<br>")}<br>
 Branch Origin: ${pullRequest.sourceRefName.replace("refs/heads/", "")}<br>
 Branch Target: ${pullRequest.targetRefName.replace("refs/heads/", "")}<br>
