@@ -12,11 +12,11 @@ export const createPrText = (
 ) => {
   return `Repositório: <a href="${pullRequest.repository.url}">${
     pullRequest.repository.name
-  }</a>
+  }</a><br><br>
  
 ${workItems
   .map((item) => `- <a href="${item.link}">${item.title}</a>`)
-  .join("<br>")}<br><br>
+  .join("<br>")}<br>
 Branch Origin: ${pullRequest.sourceRefName.replace("refs/heads/", "")}<br>
 Branch Target: ${pullRequest.targetRefName.replace("refs/heads/", "")}<br>
 Link PR: <a href="${pullRequest.url}">${pullRequest.title}</a><br><br>
