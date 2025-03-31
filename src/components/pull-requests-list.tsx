@@ -90,11 +90,12 @@ export default function PullRequestsList({
         pullRequestId: pr.pullRequestId.toString(),
       });
 
-      console.log(tasks);
       const prText = createPrText(pr, tasks);
 
+      const blob = new Blob([prText], { type: "text/html" });
+      const data = [new ClipboardItem({ "text/html": blob })];
 
-      navigator.clipboard.writeText(prText).then(() => {
+      navigator.clipboard.write(data).then(() => {
         alert("Pull request ID copied to clipboard!");
       });
     } catch (error) {

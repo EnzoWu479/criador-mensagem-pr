@@ -10,12 +10,16 @@ export const createPrText = (
   pullRequest: IAzureDevopsPullRequest,
   workItems: IWorkItem[]
 ) => {
-  return `Repositório: ${pullRequest.repository.name}
+  return `Repositório: <a href="${pullRequest.repository.url}">${
+    pullRequest.repository.name
+  }</a>
  
-${workItems.map((item) => `- [${item.title}](${item.link})`).join("\n")}
+${workItems
+  .map((item) => `- <a href="${item.link}">${item.title}</a>`)
+  .join("<br>")}
 Branch Origin: ${pullRequest.sourceRefName.replace("refs/heads/", "")}
 Branch Target: ${pullRequest.targetRefName.replace("refs/heads/", "")}
-Link PR: [${pullRequest.title}](${pullRequest.url})
+Link PR: <a href="${pullRequest.url}">${pullRequest.title}</a>
  
 Reviewers: ${pullRequest.reviewers
     .map((reviewer) => reviewer.displayName)
