@@ -14,6 +14,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { fetchProjects } from "@/lib/azure-devops-api";
+import { useQueryProjects } from "@/hooks/queries/useQueryProjects";
 
 interface Project {
   id: string;
@@ -35,39 +36,12 @@ export default function ProjectSelect({
   organization,
   enabled,
 }: ProjectSelectProps) {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchProjs = async () => {
-    if (!token || !organization) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const projs = await fetchProjects({ token, organization });
-      setProjects(projs);
-
-      // If we have projects and none is selected, select the first one
-      if (projs.length > 0 && !value) {
-        onValueChange(projs[0].name);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch projects");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch projects when organization changes
-  useEffect(() => {
-    if (enabled && organization) {
-      fetchProjs();
-    }
-  }, [organization, enabled]);
+  const {
+    data: projects,
+    refetch,
+    isLoading,
+    error,
+  } = useQueryProjects(token, organization);
 
   if (!enabled) {
     return (
@@ -95,7 +69,7 @@ export default function ProjectSelect({
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-2">
         <Label>Project</Label>
@@ -110,12 +84,12 @@ export default function ProjectSelect({
         <Label>Project</Label>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error.message}</AlertDescription>
         </Alert>
         <Button
           variant="outline"
           size="sm"
-          onClick={fetchProjs}
+          onClick={() => refetch()}
           className="mt-2"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
@@ -132,14 +106,14 @@ export default function ProjectSelect({
         <Button
           variant="ghost"
           size="sm"
-          onClick={fetchProjs}
+          onClick={() => refetch()}
           className="h-6 px-2"
         >
           <RefreshCw className="h-3 w-3" />
         </Button>
       </div>
 
-      {projects.length === 0 ? (
+      {projects?.length === 0 ? (
         <Alert>
           <AlertDescription>
             No projects found in this organization.
@@ -151,7 +125,7 @@ export default function ProjectSelect({
             <SelectValue placeholder="Select project" />
           </SelectTrigger>
           <SelectContent>
-            {projects.map((proj) => (
+            {projects?.map((proj) => (
               <SelectItem key={proj.id} value={proj.name}>
                 {proj.name}
               </SelectItem>

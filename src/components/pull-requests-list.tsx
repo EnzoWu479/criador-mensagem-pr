@@ -25,6 +25,7 @@ import { fetchPullRequests, fetchTasksFromPR } from "@/lib/azure-devops-api";
 import { IAzureDevopsPullRequest } from "@/types/pull-requests";
 import { createPrText } from "@/utils/create-pr-text";
 import { cn } from "@/lib/utils";
+import { useQueryPullrequests } from "@/hooks/queries/useQueryPullRequests";
 
 interface PullRequestsListProps {
   token: string;
@@ -43,51 +44,22 @@ export default function PullRequestsList({
   enabled,
   pullRequestId,
 }: PullRequestsListProps) {
-  const [pullRequests, setPullRequests] = useState<IAzureDevopsPullRequest[]>(
-    []
-  );
   const [copyLoading, setCopyLoading] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { data, refetch, isLoading, error } = useQueryPullrequests({
+    organization,
+    project,
+    repositoryId,
+    status: "active", // Fetch all PRs regardless of status
+  });
 
-  const fetchPRs = async () => {
-    if (!token || !organization || !project || !repositoryId) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const prs = await fetchPullRequests({
-        token,
-        organization,
-        project,
-        repositoryId,
-        status: "active", // Fetch all PRs regardless of status
-      });
-      if (pullRequestId) {
-        const filteredPRs = prs.filter(
-          (pr) => pr.pullRequestId.toString() === pullRequestId
-        );
-        setPullRequests(filteredPRs);
-      } else {
-        setPullRequests(prs);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch pull requests"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  const pullRequests = pullRequestId
+    ? data?.filter((pr) => pr.pullRequestId.toString() === pullRequestId)
+    : data;
 
   const handleCopy = async (pr: IAzureDevopsPullRequest) => {
     try {
       setCopyLoading(true);
       const tasks = await fetchTasksFromPR({
-        token,
         organization,
         project,
         repositoryId,
@@ -108,13 +80,6 @@ export default function PullRequestsList({
     }
   };
 
-  // Fetch pull requests when repository changes
-  useEffect(() => {
-    if (enabled && repositoryId) {
-      fetchPRs();
-    }
-  }, [repositoryId, enabled]);
-
   if (!enabled) {
     return null;
   }
@@ -132,7 +97,7 @@ export default function PullRequestsList({
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -157,12 +122,12 @@ export default function PullRequestsList({
         <CardContent>
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{error.message}</AlertDescription>
           </Alert>
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchPRs}
+            onClick={() => refetch()}
             className="mt-4"
           >
             <RefreshCw className="mr-2 h-4 w-4" />
@@ -179,24 +144,24 @@ export default function PullRequestsList({
         <div>
           <CardTitle>Pull Requests</CardTitle>
           <CardDescription>
-            {pullRequests.length} pull request
-            {pullRequests.length !== 1 ? "s" : ""} found
+            {pullRequests?.length} pull request
+            {pullRequests?.length !== 1 ? "s" : ""} found
           </CardDescription>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchPRs}>
+        <Button variant="outline" size="sm" onClick={() => refetch()}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh
         </Button>
       </CardHeader>
       <CardContent className="space-y-4">
-        {pullRequests.length === 0 ? (
+        {pullRequests?.length === 0 ? (
           <Alert>
             <AlertDescription>
               No pull requests found in this repository.
             </AlertDescription>
           </Alert>
         ) : (
-          pullRequests.map((pr) => (
+          pullRequests?.map((pr) => (
             <Card key={pr.pullRequestId} className="overflow-hidden">
               <div className="p-4">
                 <div className="flex items-start justify-between">

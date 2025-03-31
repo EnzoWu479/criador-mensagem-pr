@@ -1,58 +1,25 @@
 "use client";
 
+import { IAzureDevopsResponse } from "@/app/api/azure-devops/types/global";
+import { IAzureDevopsProject } from "@/app/api/azure-devops/types/project";
 import { IAzureDevopsPullRequest } from "@/types/pull-requests";
+import { IAzureDevOpsRepository } from "@/types/repositories";
 
 // Azure DevOps API utility functions through our server-side API routes
 
 interface AzureDevOpsConfig {
-  token: string;
   organization?: string;
   project?: string;
 }
 
-// Function to fetch organizations from Azure DevOps
-export async function fetchOrganizations({ token }: AzureDevOpsConfig) {
-  try {
-    const response = await fetch("/api/azure-devops/organizations", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ token }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error ||
-          `Error fetching organizations: ${response.status} ${response.statusText}`
-      );
-    }
-
-    const data = await response.json();
-    return data.value || [];
-  } catch (error) {
-    console.error("Error fetching organizations:", error);
-    throw error;
-  }
-}
-
 // Function to fetch projects from Azure DevOps
-export async function fetchProjects({
-  token,
-  organization,
-}: AzureDevOpsConfig) {
-  if (!organization) {
-    throw new Error("Organization is required to fetch projects");
-  }
-
+export async function fetchProjects() {
   try {
     const response = await fetch("/api/azure-devops/projects", {
-      method: "POST",
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token, organization }),
     });
 
     if (!response.ok) {
@@ -63,8 +30,8 @@ export async function fetchProjects({
       );
     }
 
-    const data = await response.json();
-    return data.value || [];
+    const data: IAzureDevopsProject[] = await response.json();
+    return data || [];
   } catch (error) {
     console.error("Error fetching projects:", error);
     throw error;
@@ -73,7 +40,6 @@ export async function fetchProjects({
 
 // Function to fetch repositories from Azure DevOps
 export async function fetchRepositories({
-  token,
   organization,
   project,
 }: AzureDevOpsConfig) {
@@ -89,7 +55,7 @@ export async function fetchRepositories({
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ token, organization, project }),
+      body: JSON.stringify({ organization, project }),
     });
 
     if (!response.ok) {
@@ -100,7 +66,8 @@ export async function fetchRepositories({
       );
     }
 
-    const data = await response.json();
+    const data: IAzureDevopsResponse<IAzureDevOpsRepository> =
+      await response.json();
     return data.value || [];
   } catch (error) {
     console.error("Error fetching repositories:", error);
@@ -110,7 +77,6 @@ export async function fetchRepositories({
 
 // Function to fetch pull requests from a specific repository
 export async function fetchPullRequests({
-  token,
   organization,
   project,
   repositoryId,
@@ -129,7 +95,6 @@ export async function fetchPullRequests({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        token,
         organization,
         project,
         repositoryId,
@@ -160,7 +125,6 @@ export interface FetchTasksFromPRParams extends AzureDevOpsConfig {
 
 // Função para buscar as tasks relacionadas a um PR
 export async function fetchTasksFromPR({
-  token,
   organization,
   project,
   repositoryId,
@@ -179,7 +143,6 @@ export async function fetchTasksFromPR({
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        token,
         organization,
         project,
         repositoryId,

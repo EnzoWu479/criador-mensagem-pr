@@ -14,6 +14,7 @@ import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { fetchRepositories } from "@/lib/azure-devops-api";
+import { useQueryRepositories } from "@/hooks/queries/useQueryRepositories";
 
 interface Repository {
   id: string;
@@ -37,41 +38,15 @@ export default function RepositorySelect({
   project,
   enabled,
 }: RepositorySelectProps) {
-  const [repositories, setRepositories] = useState<Repository[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchRepos = async () => {
-    if (!token || !organization || !project) {
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const repos = await fetchRepositories({ token, organization, project });
-      setRepositories(repos);
-
-      // If we have repositories and none is selected, select the first one
-      if (repos.length > 0 && !value) {
-        onValueChange(repos[0].id);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch repositories"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Fetch repositories when token, organization, or project changes
-  useEffect(() => {
-    if (enabled) {
-      fetchRepos();
-    }
-  }, [token, organization, project, enabled]);
+  const {
+    data: repositories,
+    isLoading,
+    refetch,
+    error,
+  } = useQueryRepositories(token, organization, project);
+  // const [repositories, setRepositories] = useState<Repository[]>([]);
+  // const [loading, setLoading] = useState(false);
+  // const [error, setError] = useState<string | null>(null);
 
   if (!enabled) {
     return (
@@ -86,7 +61,7 @@ export default function RepositorySelect({
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-2">
         <Label>Repository</Label>
@@ -101,12 +76,12 @@ export default function RepositorySelect({
         <Label>Repository</Label>
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{error.message}</AlertDescription>
         </Alert>
         <Button
           variant="outline"
           size="sm"
-          onClick={fetchRepos}
+          onClick={() => refetch()}
           className="mt-2"
         >
           <RefreshCw className="mr-2 h-4 w-4" />
@@ -123,14 +98,14 @@ export default function RepositorySelect({
         <Button
           variant="ghost"
           size="sm"
-          onClick={fetchRepos}
+          onClick={() => refetch()}
           className="h-6 px-2"
         >
           <RefreshCw className="h-3 w-3" />
         </Button>
       </div>
 
-      {repositories.length === 0 ? (
+      {repositories?.length === 0 ? (
         <Alert>
           <AlertDescription>
             No repositories found. Please check your organization and project
@@ -143,7 +118,7 @@ export default function RepositorySelect({
             <SelectValue placeholder="Select repository" />
           </SelectTrigger>
           <SelectContent>
-            {repositories.map((repo) => (
+            {repositories?.map((repo) => (
               <SelectItem key={repo.id} value={repo.name}>
                 {repo.name}
               </SelectItem>

@@ -1,33 +1,39 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server";
+import { azureDevOpsAxiosServer } from "../axios";
+import { IAzureDevopsResponse } from "../types/global";
+import { IAzureDevopsProject } from "../types/project";
 
-export async function POST(request: NextRequest) {
+export async function GET() {
   try {
-    const { token, organization } = await request.json()
+    const azureDevopsApi = await azureDevOpsAxiosServer();
 
-    if (!token || !organization) {
-      return NextResponse.json({ error: "Token and organization are required" }, { status: 400 })
+    if (!azureDevopsApi) {
+      return NextResponse.json(
+        { error: "Token and organization are required" },
+        { status: 400 }
+      );
     }
 
     // Make the request to Azure DevOps API from the server
-    const response = await fetch(`https://dev.azure.com/${organization}/_apis/projects?api-version=7.0`, {
-      headers: {
-        Authorization: `Basic ${Buffer.from(`:${token}`).toString("base64")}`,
-        "Content-Type": "application/json",
-      },
-    })
+    const response = await azureDevopsApi.get<
+      IAzureDevopsResponse<IAzureDevopsProject>
+    >(`/_apis/projects`);
 
-    if (!response.ok) {
+    if (response.status !== 200) {
       return NextResponse.json(
-        { error: `Azure DevOps API error: ${response.status} ${response.statusText}` },
-        { status: response.status },
-      )
+        {
+          error: `Azure DevOps API error: ${response.status} ${response.statusText}`,
+        },
+        { status: response.status }
+      );
     }
 
-    const data = await response.json()
-    return NextResponse.json(data)
+    return NextResponse.json(response.data.value);
   } catch (error) {
-    console.error("Error in projects API route:", error)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    console.error("Error in projects API route:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
-
