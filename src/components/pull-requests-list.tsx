@@ -66,7 +66,7 @@ export default function PullRequestsList({
         pullRequestId: pr.pullRequestId.toString(),
       });
 
-      const prText = createPrText(pr, tasks);
+      const prText = createPrText(pr, tasks, organization);
       const blob = new Blob([prText], { type: "text/html" });
       const data = [new ClipboardItem({ "text/html": blob })];
 
